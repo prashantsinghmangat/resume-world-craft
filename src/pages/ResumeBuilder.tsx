@@ -1,54 +1,48 @@
+import { Navigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Download, Eye, Plus, Trash2, Upload } from "lucide-react";
+import { FileText, Download, Eye, Plus, Trash2, Upload, Save } from "lucide-react";
 import Header from "@/components/Header";
 import { TemplateModern } from "@/components/resume/TemplateModern";
 import { ATSAnalyzer } from "@/components/resume/ATSAnalyzer";
 import { generatePDF } from "@/utils/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useResume } from "@/hooks/useResume";
 
 const ResumeBuilder = () => {
   const { toast } = useToast();
-  const [selectedTemplate, setSelectedTemplate] = useState(1);
+  const { user, loading: authLoading } = useAuth();
+  const {
+    resumeData,
+    setResumeData,
+    selectedTemplate,
+    setSelectedTemplate,
+    loading: resumeLoading,
+    saveResumeData
+  } = useResume();
+
+  // Redirect to auth if not logged in
+  if (!authLoading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (authLoading || resumeLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your resume...</p>
+        </div>
+      </div>
+    );
+  }
+
   const [showPreview, setShowPreview] = useState(true);
-  const [resumeData, setResumeData] = useState({
-    personalInfo: {
-      name: "",
-      email: "",
-      phone: "",
-      location: "",
-      linkedin: "",
-      profileImage: "",
-    },
-    summary: "",
-    experience: [
-      {
-        title: "",
-        company: "",
-        duration: "",
-        description: "",
-      },
-    ],
-    education: [
-      {
-        degree: "",
-        school: "",
-        year: "",
-      },
-    ],
-    skills: [""],
-    projects: [
-      {
-        name: "",
-        description: "",
-        technologies: "",
-      },
-    ],
-  });
 
   const templates = [
     {
@@ -186,6 +180,12 @@ const ResumeBuilder = () => {
             Advanced Resume Builder
           </h1>
           <p className="text-gray-600">Create your professional resume with ATS optimization and beautiful templates</p>
+          <div className="mt-4">
+            <Button onClick={saveResumeData} className="bg-green-600 hover:bg-green-700">
+              <Save className="h-4 w-4 mr-2" />
+              Save Resume
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
